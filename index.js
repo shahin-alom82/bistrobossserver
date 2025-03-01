@@ -50,8 +50,19 @@ async function run() {
                   const result = await userCollection.insertOne(user)
                   res.send(result)
             })
+            app.get('/users', async (req, res) => {
+                  const result = await userCollection.find().toArray()
+                  res.send(result)
+            })
 
-            // Carts Collection
+            app.delete('/users/:id', async (req, res) => {
+                  const id = req.params.id
+                  const query = {_id: new ObjectId(id)}
+                  const result = await userCollection.deleteOne(query)
+                  res.send(result)
+            })
+
+            // Carts Related Data
             app.get("/carts", async (req, res) => {
                   const email = req.query.email
                   const query = { email: email }
