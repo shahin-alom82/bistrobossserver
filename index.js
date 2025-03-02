@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require('cors');
+const jwt = require('jsonwebtoken')
 app.use(cors());
 app.use(express.json());
 require('dotenv').config()
@@ -38,8 +39,37 @@ async function run() {
                   res.send(result)
             })
 
+            // jwt Related Data
+            app.post('/jwt', async (req, res) => {
+                  const user = req.body;
+                  const token = jwt.sign(user, process.env.ACCESSS_TOKEN_SECRET, { expiresIn: '1h' })
+                  res.send({ token })
+            })
+
+            // MiddleWare
+            const verifyToken = (req, res, next) => {
+                  console.log('Insite ferify token', req.headers.authorization)
+                  if (!req.headers.authorization) {
+                        return res.status(401).send({ message: 'forbidden access' })
+                  }
+                  const token = req.headers.authorization.split(' ')[1];
+                  jwt.verify(token, process.env.ACCESSS_TOKEN_SECRET, (err, decoded) => {
+                        if (err) {
+                              return res.status(401).send({ message: 'forbidden access' })
+                        }
+                        req.decoded = decoded
+                        next()
+                  })
+            }
+
+
 
             // User Related Data
+            app.get('/users', verifyToken, async (req, res) => {
+                  const result = await userCollection.find().toArray()
+                  res.send(result)
+            })
+
             app.post("/users", async (req, res) => {
                   const user = req.body;
                   const query = { email: user.email }
@@ -50,10 +80,8 @@ async function run() {
                   const result = await userCollection.insertOne(user)
                   res.send(result)
             })
-            app.get('/users', async (req, res) => {
-                  const result = await userCollection.find().toArray()
-                  res.send(result)
-            })
+
+
 
             app.delete('/users/:id', async (req, res) => {
                   const id = req.params.id
