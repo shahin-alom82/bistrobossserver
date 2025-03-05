@@ -42,7 +42,7 @@ async function run() {
             // jwt Related Data
             app.post('/jwt', async (req, res) => {
                   const user = req.body;
-                  const token = jwt.sign(user, process.env.ACCESSS_TOKEN_SECRET, { expiresIn: '1h' })
+                  const token = jwt.sign(user, process.env.ACCESSS_TOKEN_SECRET, { expiresIn: '1hr' })
                   res.send({ token })
             })
 
@@ -63,6 +63,7 @@ async function run() {
             }
 
             const verifyAdmin = async (req, res, next) => {
+
                   const email = req.decoded.email
                   const query = { email: email };
                   const user = await userCollection.findOne(query);
@@ -71,6 +72,7 @@ async function run() {
                         return res.status(403).send({ message: 'forbidden asccess' });
                   }
                   next()
+
             }
 
 
