@@ -30,14 +30,7 @@ async function run() {
             const cartsCollection = client.db('Bistroboss').collection('carts')
             const userCollection = client.db('Bistroboss').collection('users')
 
-            app.get("/menu", async (req, res) => {
-                  const result = await menuCollection.find().toArray()
-                  res.send(result)
-            })
-            app.get("/reviews", async (req, res) => {
-                  const result = await reviewsCollection.find().toArray()
-                  res.send(result)
-            })
+
 
             // jwt Related Data
             app.post('/jwt', async (req, res) => {
@@ -75,6 +68,22 @@ async function run() {
 
             }
 
+
+            app.get("/menu", async (req, res) => {
+                  const result = await menuCollection.find().toArray()
+                  res.send(result)
+            })
+
+            app.post('/menu', verifyAdmin, verifyToken, async (req, res) => {
+                  const cartItem = req.body;
+                  const result = await menuCollection.insertOne(cartItem)
+                  res.send(result)
+            })
+
+            app.get("/reviews", async (req, res) => {
+                  const result = await reviewsCollection.find().toArray()
+                  res.send(result)
+            })
 
 
             // User Related Data
