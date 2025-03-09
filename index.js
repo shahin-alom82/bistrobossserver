@@ -9,6 +9,27 @@ const port = process.env.PORT || 5000;
 
 
 
+// app.use(cors({
+//       origin: "http://localhost:5173", // React app এর origin
+//       methods: ["GET", "POST", "PUT", "DELETE"],
+//       credentials: true
+//     }));
+
+
+// app.use(
+//       cors({
+//         origin: [
+//           "http://localhost:5173",
+//           "http://localhost:5000",
+//         ],
+//         credentials: true,
+//       })
+//     );
+//     app.use(express.json());
+
+
+
+
 // Mongobd Connect Start
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.sozmemk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -23,14 +44,10 @@ async function run() {
       try {
             await client.connect();
 
-
-
             const menuCollection = client.db('Bistroboss').collection('menu')
             const reviewsCollection = client.db('Bistroboss').collection('reviews')
             const cartsCollection = client.db('Bistroboss').collection('carts')
             const userCollection = client.db('Bistroboss').collection('users')
-
-
 
             // jwt Related Data
             app.post('/jwt', async (req, res) => {
@@ -54,9 +71,8 @@ async function run() {
                         next()
                   })
             }
-
+            // Verify Admin
             const verifyAdmin = async (req, res, next) => {
-
                   const email = req.decoded.email
                   const query = { email: email };
                   const user = await userCollection.findOne(query);
@@ -68,18 +84,52 @@ async function run() {
 
             }
 
-
+            // Menu Item
             app.get("/menu", async (req, res) => {
                   const result = await menuCollection.find().toArray()
                   res.send(result)
             })
 
-            app.post('/menu', verifyAdmin, verifyToken, async (req, res) => {
+            app.post('/menu', verifyToken, verifyAdmin, async (req, res) => {
                   const cartItem = req.body;
                   const result = await menuCollection.insertOne(cartItem)
                   res.send(result)
             })
 
+            app.delete('/menu/:id', verifyToken, verifyAdmin, async (req, res) => {
+                  const id = req.params.id;
+                  console.log("Received id delete:", id);
+                  const query = { _id: new ObjectId(id) };
+                  const result = await menuCollection.deleteOne(query);
+                  res.send(result);
+            });
+
+            app.patch("/menu/:id", async (req, res) => {
+                  const item = req.body;
+                  const id = req.params.id;
+                  const filter = { _id: new ObjectId(id) };
+                  const updatedDoc = {
+                        $set: {
+                              name: item.name,
+                              category: item.category,
+                              price: item.price,
+                              recipe: item.recipe,
+                              image: item.image,
+                        },
+                  };
+                  const result = await menuCollection.updateOne(filter, updatedDoc);
+                  res.send(result);
+            });
+
+            app.get('/menu/:id', async (req, res) => {
+                  const id = req.params.id;
+                  const query = { _id: new ObjectId(id) }
+                  const result = await menuCollection.findOne(query)
+                  res.send(result)
+            })
+
+
+            // Reviews Data
             app.get("/reviews", async (req, res) => {
                   const result = await reviewsCollection.find().toArray()
                   res.send(result)
