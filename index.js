@@ -211,7 +211,7 @@ async function run() {
 
 
             // Payment Related Api
-            
+
             // Payment Intent
             app.post("/create-payment-intent", async (req, res) => {
                   const { price } = req.body;
@@ -247,7 +247,21 @@ async function run() {
                   res.send({ paymentResult, deleteResult });
             });
 
+            // Get payment
+            app.get("/payments/:email", verifyToken, async (req, res) => {
+                  const query = { email: req.params.email };
 
+                  if (req.params.email !== req.decoded.email) {
+                        return res.status(403).send({ message: "forbidden access" });
+                  }
+
+                  try {
+                        const result = await paymentsCollection.find(query).toArray();
+                        res.send(result);
+                  } catch (error) {
+                        res.status(500).send({ message: "Internal server error" });
+                  }
+            });
 
 
 
