@@ -265,6 +265,20 @@ async function run() {
 
 
 
+            // admin state
+            app.get("/admin-states", verifyToken, async (req, res) => {
+                  const users = await userCollection.estimatedDocumentCount();
+                  const menuItems = await menuCollection.estimatedDocumentCount();
+                  const orders = await paymentsCollection.estimatedDocumentCount();
+                  const payment = await paymentsCollection.find().toArray();
+                  const revenue = payment.reduce((total, payment) => total + payment.price, 0);
+                  res.send({ users, menuItems, orders, revenue });
+            });
+
+
+
+
+
             await client.db("admin").command({ ping: 1 });
             console.log("Mongodb Connected successfully!");
       } finally {
